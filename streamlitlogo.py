@@ -111,12 +111,6 @@ html_document = f"""<!DOCTYPE html>
 """
 
 
-# ────────────────────────────────────────────────
-# Preview
-# ────────────────────────────────────────────────
-st.markdown("### Signature Preview")
-st.markdown(signature_html, unsafe_allow_html=True)
-
 
 # ────────────────────────────────────────────────
 # Download as HTML
