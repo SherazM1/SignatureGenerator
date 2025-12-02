@@ -1,95 +1,110 @@
 EMAIL_SIGNATURE_TEMPLATE = """
 <div dir="ltr">
-<table style="direction:ltr;border-collapse:collapse;">
-<tr><td style="font-size:0;height:12px;line-height:0;"></td></tr>
-<tr><td>
-  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+  <table cellpadding="0" cellspacing="0" border="0"
+         style="border-collapse:collapse;font-family:Arial, sans-serif;font-size:12px;color:#555555;">
     <tr>
-      <td>
-        <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;line-height:1.15;">
+      <!-- Logo cell -->
+      <td valign="top" style="padding:0 16px 0 0;border-right:1px solid #BDBDBD;">
+        <a href="{company_website}" target="_blank" rel="nofollow noreferrer"
+           style="text-decoration:none;display:block;">
+          <img src="{logo_url}" alt="logo" border="0"
+               style="display:block;height:60px;width:auto;">
+        </a>
+      </td>
+
+      <!-- Text cell -->
+      <td valign="top" style="padding:0 0 0 16px;">
+        <table cellpadding="0" cellspacing="0" border="0"
+               style="border-collapse:collapse;font-family:Arial, sans-serif;">
+
+          <!-- Name -->
           <tr>
-            <!-- Logo -->
-            <td style="vertical-align:middle;padding:.01px 12px 0.01px 1px;width:130px;text-align:center;">
-              <p style="margin:1px">
-                <a href="{company_website}" style="display:block;font-size:.1px;text-decoration:none; color:inherit;" target="_blank" rel="nofollow noreferrer">
-                  <img border="0" src="{logo_url}" height="83" width="130" alt="logo" style="width:130px;vertical-align:middle;border-radius:0;height:83px;border:0;display:block;">
-                </a>
-              </p>
-            </td>
-            <!-- Details -->
-            <td valign="top" style="padding:.01px 0.01px 0.01px 12px;vertical-align:top;border-left:solid 1px #BDBDBD;">
-              <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                  <td style="padding:.01px;">
-                    <p style="margin:.1px;line-height:108.0%;font-size:14px;">
-                      <span style="font-family:Arial;font-size:14px;font-weight:bold;color:#646464;letter-spacing:0;white-space:nowrap;">{name}</span><br>
-                      <span style="font-family:Arial;font-size:11px;font-weight:bold;color:#646464;white-space:nowrap;">{title}</span>
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="height:0;">
-                    <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                      <tr>
-                        <!-- Phone -->
-                        <td nowrap width="86" style="height:0;padding-top:12px;white-space:nowrap;width:86px;font-family:Arial;">
-                          <p style="margin:1px;line-height:99%;font-size:9px;">
-                            <span style="white-space:nowrap;">
-                              <a href="tel:{phone}" target="_blank" style="font-family:Arial;text-decoration:none; color:inherit;" rel="nofollow noreferrer">
-                                <span style="line-height:120%;font-family:Arial;font-size:9px;color:#212121;white-space:nowrap;">{phone}</span>
-                              </a>
-                            </span>
-                          </p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <!-- Email -->
-                        <td nowrap width="172" style="height:0;padding-top:4px;white-space:nowrap;width:172px;font-family:Arial;">
-                          <p style="margin:1px;line-height:99%;font-size:9px;">
-                            <span style="white-space:nowrap;">
-                              <a href="mailto:{email}" target="_blank" style="font-family:Arial;text-decoration:none; color:inherit;" rel="nofollow noreferrer">
-                                <span style="line-height:120%;font-family:Arial;font-size:9px;color:#212121;white-space:nowrap;">{email}</span>
-                              </a>
-                            </span>
-                          </p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <!-- Website -->
-                        <td nowrap width="145" style="height:0;padding-top:4px;white-space:nowrap;width:145px;font-family:Arial;">
-                          <p style="margin:1px;line-height:99%;font-size:9px;">
-                            <span style="white-space:nowrap;">
-                              <a href="{website_url}" target="_blank" style="font-family:Arial;text-decoration:none; color:inherit;" rel="nofollow noreferrer">
-                                <span style="line-height:120%;font-family:Arial;font-size:9px;color:#212121;white-space:nowrap;">{website}</span>
-                              </a>
-                            </span>
-                          </p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <!-- Address -->
-                        <td nowrap width="248" style="height:0;padding-top:4px;white-space:nowrap;width:248px;font-family:Arial;">
-                          <p style="margin:1px;line-height:99%;font-size:9px;">
-                            <span style="white-space:nowrap;">
-                              <a href="{maps_url}" target="_blank" style="font-family:Arial;text-decoration:none; color:inherit;" rel="nofollow noreferrer">
-                                <span style="line-height:120%;font-family:Arial;font-size:9px;color:#212121;white-space:nowrap;">{address}</span>
-                              </a>
-                            </span>
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+            <td style="padding-bottom:2px;">
+              <span style="font-size:13px;font-weight:bold;color:#0062B8;">
+                {name}
+              </span>
             </td>
           </tr>
+
+          <!-- Title -->
+          <tr>
+            <td style="padding-bottom:8px;">
+              <span style="font-size:11px;font-weight:bold;color:#666666;">
+                {title}
+              </span>
+            </td>
+          </tr>
+
+          <!-- Phone -->
+          <tr>
+            <td style="padding-bottom:2px;">
+              <a href="tel:{phone}"
+                 style="font-size:12px;color:#0062B8;text-decoration:underline;">
+                {phone}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Email -->
+          <tr>
+            <td style="padding-bottom:2px;">
+              <a href="mailto:{email}"
+                 style="font-size:12px;color:#0062B8;text-decoration:underline;">
+                {email}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Website 1 -->
+          <tr>
+            <td style="padding-bottom:2px;">
+              <a href="{website_1_url}"
+                 style="font-size:12px;color:#0062B8;text-decoration:underline;">
+                {website_1}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Website 2 -->
+          <tr>
+            <td style="padding-bottom:2px;">
+              <a href="{website_2_url}"
+                 style="font-size:12px;color:#0062B8;text-decoration:underline;">
+                {website_2}
+              </a>
+            </td>
+          </tr>
+
+          <!-- Address line 1 -->
+          <tr>
+            <td style="padding-bottom:2px;">
+              <span style="font-size:12px;color:#555555;">
+                {address_line_1}
+              </span>
+            </td>
+          </tr>
+
+          <!-- Address line 2 -->
+          <tr>
+            <td style="padding-bottom:8px;">
+              <span style="font-size:12px;color:#555555;">
+                {address_line_2}
+              </span>
+            </td>
+          </tr>
+
+          <!-- Optional social / extra text (no images, keeps one-image rule) -->
+          <tr>
+            <td>
+              <span style="font-size:11px;color:#555555;">
+                {social_line}
+              </span>
+            </td>
+          </tr>
+
         </table>
       </td>
     </tr>
   </table>
-</td></tr>
-<tr><td style="font-family:'ws-id m57yJL0n';font-size:.01px;line-height:0;">&nbsp;</td></tr>
-</table>
 </div>
 """
