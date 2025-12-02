@@ -132,21 +132,36 @@ with st.expander("Show raw HTML for copying"):
 st.markdown("### Download as image")
 
 if st.button("Generate PNG image"):
-    hti = Html2Image(size=(800, 200))  # adjust size if needed
+    try:
+        from html2image import Html2Image
 
-    # Render to an in-memory PNG
-    hti.screenshot(
-        html_str=html_document,
-        save_as="signature.png",
-    )
+        # You can tweak size here if needed
+        hti = Html2Image(size=(800, 200))
 
-    with open("signature.png", "rb") as f:
-        png_bytes = f.read()
+        # Render to a PNG file in the current directory
+        hti.screenshot(
+            html_str=html_document,
+            save_as="signature.png",
+        )
 
-    st.image(png_bytes, caption="Generated signature image")
-    st.download_button(
-        "Download PNG",
-        data=png_bytes,
-        file_name="signature.png",
-        mime="image/png",
-    )
+        with open("signature.png", "rb") as f:
+            png_bytes = f.read()
+
+        st.image(png_bytes, caption="Generated signature image")
+        st.download_button(
+            "Download PNG",
+            data=png_bytes,
+            file_name="signature.png",
+            mime="image/png",
+        )
+    except FileNotFoundError:
+        st.error(
+            "PNG generation isn't supported on this server because a headless "
+            "Chrome/Chromium browser isn't installed. "
+            "You can still use the HTML download and copy it into Outlook."
+        )
+    except Exception as e:
+        st.error(
+            "Something went wrong while generating the image. "
+            "PNG export works best when running this app locally."
+        )
