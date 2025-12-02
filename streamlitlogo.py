@@ -43,10 +43,10 @@ else:
 col1, col2 = st.columns(2)
 
 with col1:
-    name = st.text_input("Name", value="Brittany Teague")
-    title = st.text_input("Job Title", value="Director of Business Development")
-    phone = st.text_input("Phone Number", value="918-440-1925")
-    email = st.text_input("Email", value="bteague@soapboxretail.com")
+    name = st.text_input("Name", value="Raz ")
+    title = st.text_input("Job Title", value="MVP")
+    phone = st.text_input("Phone Number", value="555-555-5555")
+    email = st.text_input("Email", value="smukhtar@soapboxretail.com")
 
 with col2:
     website_1 = st.text_input("Website 1 (text)", value="www.soapboxretail.com")
