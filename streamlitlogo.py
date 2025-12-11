@@ -16,9 +16,95 @@ st.markdown(
 )
 
 
+# ────────────────────────────────────────────────
+# Helpers
+# ────────────────────────────────────────────────
 def get_base64_img(file):
     """Convert uploaded image file to a base64 data URL."""
     return base64.b64encode(file.read()).decode("utf-8")
+
+
+def make_row(inner_html: str, is_last: bool = False) -> str:
+    """Return a single table row with consistent spacing."""
+    padding = "2px" if is_last else "4px"
+    return f'<tr><td style="padding-bottom:{padding};border:none;">{inner_html}</td></tr>'
+
+
+def build_details_rows(
+    name: str,
+    title: str,
+    phone: str,
+    email: str,
+    website_1: str,
+    website_1_url: str,
+    website_2: str,
+    website_2_url: str,
+    address_line_1: str,
+    address_line_2: str,
+    social_line: str,
+) -> str:
+    """
+    Build the right-hand text block rows dynamically based on which fields are filled.
+    Empty fields simply don't generate a row, so spacing always looks clean.
+    """
+    items = []
+
+    if name.strip():
+        items.append(
+            f'<span style="font-size:14px;font-weight:bold;color:#000000;">{name}</span>'
+        )
+
+    if title.strip():
+        items.append(
+            f'<span style="font-size:12px;font-weight:bold;color:#000000;">{title}</span>'
+        )
+
+    if phone.strip():
+        items.append(
+            f'<a href="tel:{phone}" '
+            f'style="font-size:12px;color:#000000;text-decoration:none;">{phone}</a>'
+        )
+
+    if email.strip():
+        items.append(
+            f'<a href="mailto:{email}" '
+            f'style="font-size:12px;color:#000000;text-decoration:none;">{email}</a>'
+        )
+
+    if website_1.strip():
+        items.append(
+            f'<a href="{website_1_url}" '
+            f'style="font-size:12px;color:#000000;text-decoration:none;">{website_1}</a>'
+        )
+
+    if website_2.strip():
+        items.append(
+            f'<a href="{website_2_url}" '
+            f'style="font-size:12px;color:#000000;text-decoration:none;">{website_2}</a>'
+        )
+
+    if address_line_1.strip():
+        items.append(
+            f'<span style="font-size:12px;color:#000000;">{address_line_1}</span>'
+        )
+
+    if address_line_2.strip():
+        items.append(
+            f'<span style="font-size:12px;color:#000000;">{address_line_2}</span>'
+        )
+
+    if social_line.strip():
+        items.append(
+            f'<span style="font-size:11px;color:#000000;">{social_line}</span>'
+        )
+
+    # Turn items into rows with consistent spacing, slightly tighter on the last line
+    rows = []
+    for idx, html in enumerate(items):
+        is_last = idx == len(items) - 1
+        rows.append(make_row(html, is_last=is_last))
+
+    return "\n".join(rows)
 
 
 # ────────────────────────────────────────────────
@@ -43,7 +129,7 @@ else:
 col1, col2 = st.columns(2)
 
 with col1:
-    name = st.text_input("Name", value="Raz ")
+    name = st.text_input("Name", value="Raz")
     title = st.text_input("Job Title", value="MVP")
     phone = st.text_input("Phone Number", value="555-555-5555")
     email = st.text_input("Email", value="smukhtar@soapboxretail.com")
@@ -80,27 +166,30 @@ company_website = st.text_input(
 
 
 # ────────────────────────────────────────────────
-# Build signature HTML
+# Build dynamic rows + full HTML
 # ────────────────────────────────────────────────
+details_rows = build_details_rows(
+    name,
+    title,
+    phone,
+    email,
+    website_1,
+    website_1_url,
+    website_2,
+    website_2_url,
+    address_line_1,
+    address_line_2,
+    social_line,
+)
+
 fields = {
-    "name": name,
-    "title": title,
-    "phone": phone,
-    "email": email,
-    "website_1": website_1,
-    "website_1_url": website_1_url,
-    "website_2": website_2,
-    "website_2_url": website_2_url,
-    "address_line_1": address_line_1,
-    "address_line_2": address_line_2,
-    "social_line": social_line,
     "logo_url": logo_url,
     "company_website": company_website,
+    "details_rows": details_rows,
 }
 
 signature_html = EMAIL_SIGNATURE_TEMPLATE.format(**fields)
 
-# Wrap in a minimal HTML document for download/opening
 html_document = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -110,6 +199,12 @@ html_document = f"""<!DOCTYPE html>
 </html>
 """
 
+
+# ────────────────────────────────────────────────
+# Preview
+# ────────────────────────────────────────────────
+st.markdown("### Signature Preview")
+st.markdown(signature_html, unsafe_allow_html=True)
 
 
 # ────────────────────────────────────────────────
