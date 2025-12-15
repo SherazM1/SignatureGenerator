@@ -46,6 +46,9 @@ def build_details_rows(
     """
     Build the right-hand text block rows dynamically based on which fields are filled.
     Empty fields simply don't generate a row, so spacing always looks clean.
+
+    NOTE: Outlook loves forcing hyperlinks to blue. We hard-override link styling
+    with inline CSS + !important so links stay black and non-underlined.
     """
     items = []
 
@@ -62,25 +65,29 @@ def build_details_rows(
     if phone.strip():
         items.append(
             f'<a href="tel:{phone}" '
-            f'style="font-size:12px;color:#000000;text-decoration:none;">{phone}</a>'
+            f'style="font-size:12px;color:#000000 !important;'
+            f'text-decoration:none !important;">{phone}</a>'
         )
 
     if email.strip():
         items.append(
             f'<a href="mailto:{email}" '
-            f'style="font-size:12px;color:#000000;text-decoration:none;">{email}</a>'
+            f'style="font-size:12px;color:#000000 !important;'
+            f'text-decoration:none !important;">{email}</a>'
         )
 
     if website_1.strip():
         items.append(
             f'<a href="{website_1_url}" '
-            f'style="font-size:12px;color:#000000;text-decoration:none;">{website_1}</a>'
+            f'style="font-size:12px;color:#000000 !important;'
+            f'text-decoration:none !important;">{website_1}</a>'
         )
 
     if website_2.strip():
         items.append(
             f'<a href="{website_2_url}" '
-            f'style="font-size:12px;color:#000000;text-decoration:none;">{website_2}</a>'
+            f'style="font-size:12px;color:#000000 !important;'
+            f'text-decoration:none !important;">{website_2}</a>'
         )
 
     if address_line_1.strip():
@@ -105,6 +112,7 @@ def build_details_rows(
         rows.append(make_row(html, is_last=is_last))
 
     return "\n".join(rows)
+
 
 
 # ────────────────────────────────────────────────
