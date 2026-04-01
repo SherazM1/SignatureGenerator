@@ -1,5 +1,6 @@
 from template import EMAIL_SIGNATURE_TEMPLATE
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 
 
@@ -30,27 +31,27 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
     Returns a hidden spacer if no logos are uploaded so layout remains stable.
     """
     if not logo_urls:
-        return '<span style="display:block;width:140px;height:1px;"></span>'
+        return '<span style="display:block;width:180px;height:1px;"></span>'
 
     rows = []
     for idx, logo_url in enumerate(logo_urls):
-        bottom_pad = "10px" if idx < len(logo_urls) - 1 else "0"
+        bottom_pad = "12px" if idx < len(logo_urls) - 1 else "0"
         rows.append(
             "<tr>"
-            f'<td style="padding:0 0 {bottom_pad} 0;border:none;vertical-align:middle;">'
+            f'<td style="padding:0 0 {bottom_pad} 0;border:none !important;vertical-align:middle;">'
             f'<a href="{company_website}" target="_blank" '
-            'style="text-decoration:none;display:block;">'
+            'style="text-decoration:none;display:block;border:none !important;">'
             f'<img src="{logo_url}" alt="logo {idx + 1}" '
-            'style="display:block;height:auto;max-height:34px;max-width:170px;'
-            'width:auto;border:0;outline:none;text-decoration:none;">'
+            'style="display:block;width:170px;height:auto;max-width:170px;'
+            'border:0;outline:none;text-decoration:none;">'
             "</a>"
             "</td>"
             "</tr>"
         )
 
     return (
-        '<table cellpadding="0" cellspacing="0" border="0" '
-        'style="border-collapse:collapse;border:none;">'
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'style="border-collapse:collapse;border:none !important;width:180px;">'
         f"{''.join(rows)}"
         "</table>"
     )
@@ -248,7 +249,7 @@ html_document = f"""<!DOCTYPE html>
 # Preview
 # ────────────────────────────────────────────────
 st.markdown("### Signature Preview")
-st.markdown(signature_html, unsafe_allow_html=True)
+components.html(html_document, height=280, scrolling=False)
 
 
 # ────────────────────────────────────────────────
