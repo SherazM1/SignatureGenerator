@@ -35,8 +35,8 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
 
     rows = []
     for idx, logo_url in enumerate(logo_urls):
-        top_pad = "10px" if idx == 0 else "0"
-        bottom_pad = "16px" if idx < len(logo_urls) - 1 else "0"
+        top_pad = "14px" if idx == 0 else "0"
+        bottom_pad = "22px" if idx < len(logo_urls) - 1 else "0"
         rows.append(
             "<tr>"
             f'<td style="padding:{top_pad} 0 {bottom_pad} 0;border:none !important;vertical-align:middle;">'

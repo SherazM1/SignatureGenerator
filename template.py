@@ -7,11 +7,16 @@ EMAIL_SIGNATURE_TEMPLATE = """
     <tr>
       <!-- Stacked Logos -->
       <td valign="top"
-          style="padding:4px 20px 2px 0;
+          style="padding:4px 12px 2px 0;
                  width:190px;min-width:190px;
-                 border:none !important;
-                 border-right:1px solid #BDBDBD;">
+                 border:none !important;">
         {logos_block}
+      </td>
+
+      <!-- Divider -->
+      <td valign="top"
+          style="width:1px;min-width:1px;padding:0;border:none !important;background:#BDBDBD;font-size:0;line-height:0;">
+        &nbsp;
       </td>
 
       <!-- Dynamic Text Block -->
