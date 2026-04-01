@@ -31,7 +31,7 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
     Returns a hidden spacer if no logos are uploaded so layout remains stable.
     """
     if not logo_urls:
-        return '<span style="display:block;width:180px;height:1px;"></span>'
+        return '<span style="display:block;width:164px;height:1px;"></span>'
 
     rows = []
     for idx, logo_url in enumerate(logo_urls):
@@ -43,7 +43,7 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
             f'<a href="{company_website}" target="_blank" '
             'style="text-decoration:none;display:block;border:none !important;">'
             f'<img src="{logo_url}" alt="logo {idx + 1}" '
-            'style="display:block;width:auto;height:auto;max-width:158px;max-height:38px;'
+            'style="display:block;width:auto;height:auto;max-width:150px;max-height:34px;'
             'border:0;outline:none;text-decoration:none;">'
             "</a>"
             "</td>"
@@ -52,7 +52,7 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
 
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
-        'style="border-collapse:collapse;border:none !important;width:180px;">'
+        'style="border-collapse:collapse;border:none !important;width:164px;">'
         f"{''.join(rows)}"
         "</table>"
     )
