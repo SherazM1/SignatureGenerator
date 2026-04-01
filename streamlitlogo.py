@@ -35,14 +35,15 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
 
     rows = []
     for idx, logo_url in enumerate(logo_urls):
-        bottom_pad = "12px" if idx < len(logo_urls) - 1 else "0"
+        top_pad = "10px" if idx == 0 else "0"
+        bottom_pad = "16px" if idx < len(logo_urls) - 1 else "0"
         rows.append(
             "<tr>"
-            f'<td style="padding:0 0 {bottom_pad} 0;border:none !important;vertical-align:middle;">'
+            f'<td style="padding:{top_pad} 0 {bottom_pad} 0;border:none !important;vertical-align:middle;">'
             f'<a href="{company_website}" target="_blank" '
             'style="text-decoration:none;display:block;border:none !important;">'
             f'<img src="{logo_url}" alt="logo {idx + 1}" '
-            'style="display:block;width:170px;height:auto;max-width:170px;'
+            'style="display:block;width:auto;height:auto;max-width:170px;max-height:42px;'
             'border:0;outline:none;text-decoration:none;">'
             "</a>"
             "</td>"

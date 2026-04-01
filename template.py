@@ -7,7 +7,7 @@ EMAIL_SIGNATURE_TEMPLATE = """
     <tr>
       <!-- Stacked Logos -->
       <td valign="top"
-          style="padding:2px 20px 2px 0;
+          style="padding:4px 20px 2px 0;
                  width:190px;min-width:190px;
                  border:none !important;
                  border-right:1px solid #BDBDBD;">
