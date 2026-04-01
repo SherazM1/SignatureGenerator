@@ -43,7 +43,7 @@ def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
             f'<a href="{company_website}" target="_blank" '
             'style="text-decoration:none;display:block;border:none !important;">'
             f'<img src="{logo_url}" alt="logo {idx + 1}" '
-            'style="display:block;width:auto;height:auto;max-width:170px;max-height:42px;'
+            'style="display:block;width:auto;height:auto;max-width:158px;max-height:38px;'
             'border:0;outline:none;text-decoration:none;">'
             "</a>"
             "</td>"
