@@ -27,6 +27,7 @@ EMAIL_SIGNATURE_TEMPLATE = """
                       line-height:1.35;">
 
           {details_rows}
+          {signatures_row}
 
         </table>
       </td>

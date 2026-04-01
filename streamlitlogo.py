@@ -24,6 +24,34 @@ def get_base64_img(file):
     return base64.b64encode(file.read()).decode("utf-8")
 
 
+def build_signature_row(signature_urls: list[str]) -> str:
+    """
+    Build one row that renders up to 3 signature images cleanly.
+    Returns empty string when no signature images are uploaded.
+    """
+    if not signature_urls:
+        return ""
+
+    cells = []
+    for idx, sig_url in enumerate(signature_urls):
+        right_pad = "8px" if idx < len(signature_urls) - 1 else "0"
+        cells.append(
+            f'<td style="padding:0 {right_pad} 0 0;border:none;vertical-align:middle;">'
+            f'<img src="{sig_url}" alt="signature {idx + 1}" '
+            f'style="display:block;height:28px;width:auto;border:0;outline:none;text-decoration:none;">'
+            f"</td>"
+        )
+
+    return (
+        '<tr><td style="padding-top:8px;border:none;">'
+        '<table cellpadding="0" cellspacing="0" border="0" '
+        'style="border-collapse:collapse;border:none;">'
+        f"<tr>{''.join(cells)}</tr>"
+        "</table>"
+        "</td></tr>"
+    )
+
+
 def make_row(inner_html: str, is_last: bool = False) -> str:
     """Return a single table row with consistent spacing."""
     padding = "2px" if is_last else "4px"
@@ -130,6 +158,24 @@ if logo_file is not None:
 else:
     logo_url = ""
 
+# Signature uploads (up to 3)
+signature_files = st.file_uploader(
+    "Upload signature images (up to 3)",
+    type=["png", "jpg", "jpeg"],
+    accept_multiple_files=True,
+)
+
+if signature_files and len(signature_files) > 3:
+    st.warning("Only the first 3 signature images will be used.")
+
+signature_urls = []
+for sig_file in (signature_files or [])[:3]:
+    sig_filetype = sig_file.type.split("/")[-1]
+    sig_base64 = get_base64_img(sig_file)
+    signature_urls.append(f"data:image/{sig_filetype};base64,{sig_base64}")
+
+signatures_row = build_signature_row(signature_urls)
+
 
 # ────────────────────────────────────────────────
 # Text fields
@@ -194,6 +240,7 @@ fields = {
     "logo_url": logo_url,
     "company_website": company_website,
     "details_rows": details_rows,
+    "signatures_row": signatures_row,
 }
 
 signature_html = EMAIL_SIGNATURE_TEMPLATE.format(**fields)
