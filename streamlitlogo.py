@@ -27,33 +27,28 @@ def get_base64_img(file):
 
 def build_logo_stack(logo_urls: list[str], company_website: str) -> str:
     """
-    Build a clean vertical stack for up to 3 logo images.
-    Returns a hidden spacer if no logos are uploaded so layout remains stable.
+    Build a normalized single-logo block.
+    Uses a fixed logo area and centers the image so awkward proportions
+    still resolve consistently without distortion or cropping.
     """
     if not logo_urls:
-        return '<span style="display:block;width:164px;height:1px;"></span>'
+        return '<span style="display:block;width:164px;height:72px;"></span>'
 
-    rows = []
-    for idx, logo_url in enumerate(logo_urls):
-        top_pad = "14px" if idx == 0 else "0"
-        bottom_pad = "22px" if idx < len(logo_urls) - 1 else "0"
-        rows.append(
-            "<tr>"
-            f'<td style="padding:{top_pad} 0 {bottom_pad} 0;border:none !important;vertical-align:middle;">'
-            f'<a href="{company_website}" target="_blank" '
-            'style="text-decoration:none;display:block;border:none !important;">'
-            f'<img src="{logo_url}" alt="logo {idx + 1}" '
-            'style="display:block;width:auto;height:auto;max-width:150px;max-height:34px;'
-            'border:0;outline:none;text-decoration:none;">'
-            "</a>"
-            "</td>"
-            "</tr>"
-        )
-
+    logo_url = logo_urls[0]
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         'style="border-collapse:collapse;border:none !important;width:164px;">'
-        f"{''.join(rows)}"
+        "<tr>"
+        '<td align="center" valign="middle" '
+        'style="width:164px;height:72px;padding:8px 0 8px 0;border:none !important;">'
+        f'<a href="{company_website}" target="_blank" '
+        'style="text-decoration:none;display:inline-block;border:none !important;">'
+        f'<img src="{logo_url}" alt="company logo" '
+        'style="display:block;margin:0 auto;width:auto;height:auto;max-width:154px;max-height:72px;'
+        'border:0;outline:none;text-decoration:none;">'
+        "</a>"
+        "</td>"
+        "</tr>"
         "</table>"
     )
 
@@ -152,14 +147,11 @@ def build_details_rows(
 # ────────────────────────────────────────────────
 # Logo upload
 # ────────────────────────────────────────────────
-logo_files = st.file_uploader(
-    "Upload company logos (up to 3, stacked)",
+logo_file = st.file_uploader(
+    "Upload company logo",
     type=["png", "jpg", "jpeg"],
-    accept_multiple_files=True,
+    accept_multiple_files=False,
 )
-
-if logo_files and len(logo_files) > 3:
-    st.warning("Only the first 3 company logos will be used.")
 
 
 # ────────────────────────────────────────────────
@@ -204,7 +196,7 @@ company_website = st.text_input(
 )
 
 logo_urls = []
-for logo_file in (logo_files or [])[:3]:
+for logo_file in [logo_file] if logo_file else []:
     filetype = logo_file.type.split("/")[-1]
     base64_img = get_base64_img(logo_file)
     logo_urls.append(f"data:image/{filetype};base64,{base64_img}")

@@ -5,10 +5,11 @@ EMAIL_SIGNATURE_TEMPLATE = """
                 mso-table-lspace:0pt;mso-table-rspace:0pt;
                 font-family:Arial, sans-serif;font-size:12px;color:#000000;">
     <tr>
-      <!-- Stacked Logos -->
+      <!-- Logo Area -->
       <td valign="top"
           style="padding:4px 6px 2px 0;
                  width:170px;min-width:170px;
+                 text-align:center;
                  border:none !important;">
         {logos_block}
       </td>
