@@ -28,7 +28,8 @@ def get_base64_img(file):
 def build_logo_html(uploaded_files, company_website: str) -> str:
     """
     Build stacked logo HTML for up to 3 uploaded logos.
-    Dynamically scales logo height based on how many are uploaded.
+    Dynamically scales logo dimensions and spacing based on how many are uploaded.
+    Logos preserve aspect ratio with proper vertical spacing.
     """
     if not uploaded_files:
         return ""
@@ -37,16 +38,16 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
 
     if logo_count == 1:
         max_width = "150px"
-        max_height = "85px"
+        max_height = "90px"
         padding_bottom = "0"
     elif logo_count == 2:
         max_width = "150px"
-        max_height = "45px"
-        padding_bottom = "8px"
-    else:
-        max_width = "150px"
-        max_height = "34px"
-        padding_bottom = "7px"
+        max_height = "42px"
+        padding_bottom = "14px"
+    else:  # 3 logos
+        max_width = "145px"
+        max_height = "32px"
+        padding_bottom = "9px"
 
     logo_blocks = []
 
@@ -59,23 +60,15 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
         bottom_space = "0" if is_last else padding_bottom
 
         logo_blocks.append(
-            f"""
-            <div style="text-align:center;padding-bottom:{bottom_space};border:none;">
-              <a href="{company_website}" target="_blank"
-                 style="text-decoration:none;display:block;border:none;">
-                <img src="{logo_url}" alt="logo"
-                     style="display:block;
-                            max-width:{max_width};
-                            max-height:{max_height};
-                            width:auto;
-                            height:auto;
-                            margin:0 auto;
-                            border:0;
-                            outline:none;
-                            text-decoration:none;">
-              </a>
-            </div>
-            """
+            f'<div style="text-align:center;padding-bottom:{bottom_space};">'
+            f'<a href="{company_website}" target="_blank" '
+            f'style="text-decoration:none;display:block;border:none;">'
+            f'<img src="{logo_url}" alt="logo" '
+            f'style="display:block;max-width:{max_width};max-height:{max_height};'
+            f'width:auto;height:auto;margin:0 auto;border:0;outline:none;'
+            f'text-decoration:none;">'
+            f'</a>'
+            f'</div>'
         )
 
     return "\n".join(logo_blocks)
