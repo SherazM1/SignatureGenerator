@@ -29,7 +29,7 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
     """
     Build stacked logo HTML for up to 3 uploaded logos.
     Dynamically scales logo dimensions and spacing based on how many are uploaded.
-    Logos preserve aspect ratio with proper vertical spacing.
+    Logos preserve aspect ratio with proper vertical spacing and alignment.
     """
     if not uploaded_files:
         return ""
@@ -43,11 +43,11 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
     elif logo_count == 2:
         max_width = "150px"
         max_height = "42px"
-        padding_bottom = "14px"
+        padding_bottom = "20px"
     else:  # 3 logos
         max_width = "145px"
         max_height = "32px"
-        padding_bottom = "9px"
+        padding_bottom = "12px"
 
     logo_blocks = []
 
@@ -60,9 +60,9 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
         bottom_space = "0" if is_last else padding_bottom
 
         logo_blocks.append(
-            f'<div style="text-align:center;padding-bottom:{bottom_space};">'
+            f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
             f'<a href="{company_website}" target="_blank" '
-            f'style="text-decoration:none;display:block;border:none;">'
+            f'style="text-decoration:none;display:inline-block;border:none;">'
             f'<img src="{logo_url}" alt="logo" '
             f'style="display:block;max-width:{max_width};max-height:{max_height};'
             f'width:auto;height:auto;margin:0 auto;border:0;outline:none;'
