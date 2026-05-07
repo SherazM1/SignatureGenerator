@@ -10,7 +10,7 @@ EMAIL_SIGNATURE_TEMPLATE = """
           style="padding:4px 18px 4px 0;
                  border:none;
                  border-right:1px solid #BDBDBD;
-                 width:185px;
+                 width:190px;
                  text-align:center;
                  vertical-align:middle;
                  line-height:0;">

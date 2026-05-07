@@ -106,16 +106,13 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
     logo_count = min(len(uploaded_files), 3)
 
     if logo_count == 1:
-        max_width = 148
-        max_height = 80
+        rendered_width = 170
         padding_bottom = 0
     elif logo_count == 2:
         max_width = 170
-        max_height = None
         padding_bottom = 12
     else:  # 3 logos
         max_width = 165
-        max_height = None
         padding_bottom = 8
 
     logo_blocks = []
@@ -126,16 +123,24 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
 
         is_last = idx == logo_count - 1
         bottom_space = 0 if is_last else padding_bottom
+        if logo_count == 1:
+            img_html = (
+                f'<img src="{logo_url}" alt="logo" width="{rendered_width}" '
+                f'style="display:block;width:{rendered_width}px;height:auto;'
+                f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
+            )
+        else:
+            img_html = (
+                f'<img src="{logo_url}" alt="logo" '
+                f'style="display:block;max-width:{max_width}px;width:auto;height:auto;'
+                f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
+            )
 
         logo_blocks.append(
             f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
             f'<a href="{company_website}" target="_blank" '
             f'style="text-decoration:none;display:inline-block;border:none;">'
-            f'<img src="{logo_url}" alt="logo" '
-            f'style="display:block;max-width:{max_width}px;'
-            f'{"max-height:" + str(max_height) + "px;" if max_height else ""}'
-            f'width:auto;height:auto;margin:0 auto;'
-            f'border:0;outline:none;text-decoration:none;">'
+            f'{img_html}'
             f'</a>'
             f'</div>'
         )
