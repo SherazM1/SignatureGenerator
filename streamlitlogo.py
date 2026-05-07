@@ -84,29 +84,21 @@ def _crop_logo_padding(image: Image.Image) -> Image.Image:
     return image.crop(tuple(content_bbox)) if content_bbox else image
 
 
-def _normalize_logo_to_box(file, box_width: int, box_height: int) -> str:
-    """Crop padding, fit the logo into a fixed transparent box, and return PNG base64."""
+def _preprocess_logo_image(file) -> str:
+    """Crop outer padding and re-encode the uploaded logo as PNG base64."""
     image = Image.open(BytesIO(file.getvalue())).convert("RGBA")
     image = _crop_logo_padding(image)
 
-    resample_filter = getattr(Image, "Resampling", Image).LANCZOS
-    image.thumbnail((box_width, box_height), resample_filter)
-
-    canvas = Image.new("RGBA", (box_width, box_height), (255, 255, 255, 0))
-    x = (box_width - image.width) // 2
-    y = (box_height - image.height) // 2
-    canvas.paste(image, (x, y), image)
-
     output = BytesIO()
-    canvas.save(output, format="PNG", optimize=True)
+    image.save(output, format="PNG", optimize=True)
     return base64.b64encode(output.getvalue()).decode("utf-8")
 
 
 def build_logo_html(uploaded_files, company_website: str) -> str:
     """
     Build stacked logo HTML for up to 3 uploaded logos.
-    Each logo is normalized into a fixed visual box so square/tall logos fill
-    the logo column more consistently while preserving aspect ratio.
+    Crop outer padding so square/tall logos can fill the logo column better
+    without forcing blurry width/height rendering in HTML.
     """
     if not uploaded_files:
         return ""
@@ -114,22 +106,19 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
     logo_count = min(len(uploaded_files), 3)
 
     if logo_count == 1:
-        box_width = 155
-        box_height = 90
+        max_width = 170
         padding_bottom = 0
     elif logo_count == 2:
-        box_width = 155
-        box_height = 46
+        max_width = 170
         padding_bottom = 12
     else:  # 3 logos
-        box_width = 150
-        box_height = 34
+        max_width = 165
         padding_bottom = 8
 
     logo_blocks = []
 
     for idx, logo_file in enumerate(uploaded_files[:3]):
-        base64_img = _normalize_logo_to_box(logo_file, box_width, box_height)
+        base64_img = _preprocess_logo_image(logo_file)
         logo_url = f"data:image/png;base64,{base64_img}"
 
         is_last = idx == logo_count - 1
@@ -139,9 +128,8 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
             f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
             f'<a href="{company_website}" target="_blank" '
             f'style="text-decoration:none;display:inline-block;border:none;">'
-            f'<img src="{logo_url}" width="{box_width}" height="{box_height}" alt="logo" '
-            f'style="display:block;width:{box_width}px;height:{box_height}px;'
-            f'object-fit:contain;object-position:center center;margin:0 auto;'
+            f'<img src="{logo_url}" alt="logo" '
+            f'style="display:block;max-width:{max_width}px;height:auto;margin:0 auto;'
             f'border:0;outline:none;text-decoration:none;">'
             f'</a>'
             f'</div>'
