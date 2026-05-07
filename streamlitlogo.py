@@ -1,10 +1,7 @@
 from template import EMAIL_SIGNATURE_TEMPLATE
+from html import escape
 import streamlit as st
 import streamlit.components.v1 as components
-import base64
-from collections import deque
-from io import BytesIO
-from PIL import Image
 
 
 st.title("Email Signature Generator")
@@ -12,7 +9,7 @@ st.title("Email Signature Generator")
 st.markdown(
     """
     **How to use:**  
-    1. Upload your logo and fill in the fields below  
+    1. Enter your hosted logo URL and fill in the fields below  
     2. Click **Download signature as HTML**  
     3. Open the downloaded HTML file in your browser  
     4. Select the signature, copy it, and paste it into Outlook's signature editor  
@@ -23,122 +20,46 @@ st.markdown(
 # ────────────────────────────────────────────────
 # Helpers
 # ────────────────────────────────────────────────
-def get_base64_img(file):
-    """Convert uploaded image file to a base64 data URL."""
-    return base64.b64encode(file.read()).decode("utf-8")
-
-
-def _crop_logo_padding(image: Image.Image) -> Image.Image:
-    """Crop transparent or edge-connected near-white padding without trimming artwork."""
-    image = image.convert("RGBA")
-    width, height = image.size
-    pixels = image.load()
-
-    alpha_bbox = image.getchannel("A").point(lambda value: 255 if value > 8 else 0).getbbox()
-    if alpha_bbox and alpha_bbox != (0, 0, width, height):
-        return image.crop(alpha_bbox)
-
-    def is_near_white(x: int, y: int) -> bool:
-        r, g, b, a = pixels[x, y]
-        return a > 8 and r >= 245 and g >= 245 and b >= 245
-
-    visited = set()
-    queue = deque()
-
-    for x in range(width):
-        for y in (0, height - 1):
-            if (x, y) not in visited and is_near_white(x, y):
-                visited.add((x, y))
-                queue.append((x, y))
-
-    for y in range(height):
-        for x in (0, width - 1):
-            if (x, y) not in visited and is_near_white(x, y):
-                visited.add((x, y))
-                queue.append((x, y))
-
-    while queue:
-        x, y = queue.popleft()
-        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-            if (
-                0 <= nx < width
-                and 0 <= ny < height
-                and (nx, ny) not in visited
-                and is_near_white(nx, ny)
-            ):
-                visited.add((nx, ny))
-                queue.append((nx, ny))
-
-    content_bbox = None
-    for y in range(height):
-        for x in range(width):
-            if (x, y) not in visited:
-                if content_bbox is None:
-                    content_bbox = [x, y, x + 1, y + 1]
-                else:
-                    content_bbox[0] = min(content_bbox[0], x)
-                    content_bbox[1] = min(content_bbox[1], y)
-                    content_bbox[2] = max(content_bbox[2], x + 1)
-                    content_bbox[3] = max(content_bbox[3], y + 1)
-
-    return image.crop(tuple(content_bbox)) if content_bbox else image
-
-
-def _preprocess_logo_image(file) -> str:
-    """Crop outer padding and re-encode the uploaded logo as PNG base64."""
-    image = Image.open(BytesIO(file.getvalue())).convert("RGBA")
-    image = _crop_logo_padding(image)
-
-    output = BytesIO()
-    image.save(output, format="PNG", optimize=True)
-    return base64.b64encode(output.getvalue()).decode("utf-8")
-
-
-def build_logo_html(uploaded_files, company_website: str) -> str:
+def build_logo_html(logo_urls, company_website: str) -> str:
     """
-    Build stacked logo HTML for up to 3 uploaded logos.
-    Crop outer padding so square/tall logos can fill the logo column better
-    without forcing blurry width/height rendering in HTML.
+    Build stacked logo HTML for up to 3 hosted logo URLs.
+    Outlook handles normal HTTPS image URLs more reliably than base64 data URIs.
     """
-    if not uploaded_files:
+    hosted_logo_urls = [
+        logo_url.strip()
+        for logo_url in logo_urls[:3]
+        if logo_url.strip().lower().startswith("https://")
+    ]
+
+    if not hosted_logo_urls:
         return ""
 
-    logo_count = min(len(uploaded_files), 3)
+    logo_count = len(hosted_logo_urls)
 
     if logo_count == 1:
-        rendered_width = 170
         padding_bottom = 0
     elif logo_count == 2:
-        max_width = 170
         padding_bottom = 12
     else:  # 3 logos
-        max_width = 165
         padding_bottom = 8
 
+    safe_company_website = escape(company_website.strip(), quote=True)
     logo_blocks = []
 
-    for idx, logo_file in enumerate(uploaded_files[:3]):
-        base64_img = _preprocess_logo_image(logo_file)
-        logo_url = f"data:image/png;base64,{base64_img}"
-
+    for idx, logo_url in enumerate(hosted_logo_urls):
+        safe_logo_url = escape(logo_url, quote=True)
         is_last = idx == logo_count - 1
         bottom_space = 0 if is_last else padding_bottom
-        if logo_count == 1:
-            img_html = (
-                f'<img src="{logo_url}" alt="logo" width="{rendered_width}" '
-                f'style="display:block;width:{rendered_width}px;height:auto;'
-                f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
-            )
-        else:
-            img_html = (
-                f'<img src="{logo_url}" alt="logo" '
-                f'style="display:block;max-width:{max_width}px;width:auto;height:auto;'
-                f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
-            )
+
+        img_html = (
+            f'<img src="{safe_logo_url}" alt="logo" width="125" '
+            f'style="display:block;width:125px;height:auto;'
+            f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
+        )
 
         logo_blocks.append(
             f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
-            f'<a href="{company_website}" target="_blank" '
+            f'<a href="{safe_company_website}" target="_blank" '
             f'style="text-decoration:none;display:inline-block;border:none;">'
             f'{img_html}'
             f'</a>'
@@ -240,16 +161,33 @@ def build_details_rows(
 
 
 # ────────────────────────────────────────────────
-# Logo upload
+# Hosted logo URLs
 # ────────────────────────────────────────────────
-logo_files = st.file_uploader(
-    "Upload company logo(s) - up to 3 images",
-    type=["png", "jpg", "jpeg"],
-    accept_multiple_files=True,
+logo_url_1 = st.text_input(
+    "Hosted logo URL",
+    value="",
+    placeholder="https://example.com/logo.png",
+)
+logo_url_2 = st.text_input(
+    "Hosted logo URL 2 (optional)",
+    value="",
+    placeholder="https://example.com/logo-2.png",
+)
+logo_url_3 = st.text_input(
+    "Hosted logo URL 3 (optional)",
+    value="",
+    placeholder="https://example.com/logo-3.png",
 )
 
-if logo_files and len(logo_files) > 3:
-    st.warning("Only the first 3 uploaded logos will be used.")
+logo_urls = [logo_url_1, logo_url_2, logo_url_3]
+invalid_logo_urls = [
+    logo_url.strip()
+    for logo_url in logo_urls
+    if logo_url.strip() and not logo_url.strip().lower().startswith("https://")
+]
+
+if invalid_logo_urls:
+    st.warning("Logo URLs must be hosted HTTPS URLs. Non-HTTPS logo URLs will be ignored.")
 
 
 # ────────────────────────────────────────────────
@@ -293,7 +231,7 @@ company_website = st.text_input(
     value="https://www.soapboxretail.com",
 )
 
-logo_html = build_logo_html(logo_files, company_website)
+logo_html = build_logo_html(logo_urls, company_website)
 
 
 # ────────────────────────────────────────────────
