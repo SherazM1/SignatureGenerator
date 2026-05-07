@@ -2,6 +2,9 @@ from template import EMAIL_SIGNATURE_TEMPLATE
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
+from collections import deque
+from io import BytesIO
+from PIL import Image
 
 
 st.title("Email Signature Generator")
@@ -25,11 +28,85 @@ def get_base64_img(file):
     return base64.b64encode(file.read()).decode("utf-8")
 
 
+def _crop_logo_padding(image: Image.Image) -> Image.Image:
+    """Crop transparent or edge-connected near-white padding without trimming artwork."""
+    image = image.convert("RGBA")
+    width, height = image.size
+    pixels = image.load()
+
+    alpha_bbox = image.getchannel("A").point(lambda value: 255 if value > 8 else 0).getbbox()
+    if alpha_bbox and alpha_bbox != (0, 0, width, height):
+        return image.crop(alpha_bbox)
+
+    def is_near_white(x: int, y: int) -> bool:
+        r, g, b, a = pixels[x, y]
+        return a > 8 and r >= 245 and g >= 245 and b >= 245
+
+    visited = set()
+    queue = deque()
+
+    for x in range(width):
+        for y in (0, height - 1):
+            if (x, y) not in visited and is_near_white(x, y):
+                visited.add((x, y))
+                queue.append((x, y))
+
+    for y in range(height):
+        for x in (0, width - 1):
+            if (x, y) not in visited and is_near_white(x, y):
+                visited.add((x, y))
+                queue.append((x, y))
+
+    while queue:
+        x, y = queue.popleft()
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if (
+                0 <= nx < width
+                and 0 <= ny < height
+                and (nx, ny) not in visited
+                and is_near_white(nx, ny)
+            ):
+                visited.add((nx, ny))
+                queue.append((nx, ny))
+
+    content_bbox = None
+    for y in range(height):
+        for x in range(width):
+            if (x, y) not in visited:
+                if content_bbox is None:
+                    content_bbox = [x, y, x + 1, y + 1]
+                else:
+                    content_bbox[0] = min(content_bbox[0], x)
+                    content_bbox[1] = min(content_bbox[1], y)
+                    content_bbox[2] = max(content_bbox[2], x + 1)
+                    content_bbox[3] = max(content_bbox[3], y + 1)
+
+    return image.crop(tuple(content_bbox)) if content_bbox else image
+
+
+def _normalize_logo_to_box(file, box_width: int, box_height: int) -> str:
+    """Crop padding, fit the logo into a fixed transparent box, and return PNG base64."""
+    image = Image.open(BytesIO(file.getvalue())).convert("RGBA")
+    image = _crop_logo_padding(image)
+
+    resample_filter = getattr(Image, "Resampling", Image).LANCZOS
+    image.thumbnail((box_width, box_height), resample_filter)
+
+    canvas = Image.new("RGBA", (box_width, box_height), (255, 255, 255, 0))
+    x = (box_width - image.width) // 2
+    y = (box_height - image.height) // 2
+    canvas.paste(image, (x, y), image)
+
+    output = BytesIO()
+    canvas.save(output, format="PNG", optimize=True)
+    return base64.b64encode(output.getvalue()).decode("utf-8")
+
+
 def build_logo_html(uploaded_files, company_website: str) -> str:
     """
     Build stacked logo HTML for up to 3 uploaded logos.
-    Dynamically scales logo dimensions and spacing based on how many are uploaded.
-    Logos preserve aspect ratio with proper vertical spacing and alignment.
+    Each logo is normalized into a fixed visual box so square/tall logos fill
+    the logo column more consistently while preserving aspect ratio.
     """
     if not uploaded_files:
         return ""
@@ -37,36 +114,35 @@ def build_logo_html(uploaded_files, company_website: str) -> str:
     logo_count = min(len(uploaded_files), 3)
 
     if logo_count == 1:
-        max_width = "150px"
-        max_height = "90px"
-        padding_bottom = "0"
+        box_width = 155
+        box_height = 90
+        padding_bottom = 0
     elif logo_count == 2:
-        max_width = "150px"
-        max_height = "42px"
-        padding_bottom = "20px"
+        box_width = 155
+        box_height = 46
+        padding_bottom = 12
     else:  # 3 logos
-        max_width = "145px"
-        max_height = "32px"
-        padding_bottom = "12px"
+        box_width = 150
+        box_height = 34
+        padding_bottom = 8
 
     logo_blocks = []
 
     for idx, logo_file in enumerate(uploaded_files[:3]):
-        filetype = logo_file.type.split("/")[-1]
-        base64_img = get_base64_img(logo_file)
-        logo_url = f"data:image/{filetype};base64,{base64_img}"
+        base64_img = _normalize_logo_to_box(logo_file, box_width, box_height)
+        logo_url = f"data:image/png;base64,{base64_img}"
 
         is_last = idx == logo_count - 1
-        bottom_space = "0" if is_last else padding_bottom
+        bottom_space = 0 if is_last else padding_bottom
 
         logo_blocks.append(
             f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
             f'<a href="{company_website}" target="_blank" '
             f'style="text-decoration:none;display:inline-block;border:none;">'
-            f'<img src="{logo_url}" alt="logo" '
-            f'style="display:block;max-width:{max_width};max-height:{max_height};'
-            f'width:auto;height:auto;margin:0 auto;border:0;outline:none;'
-            f'text-decoration:none;">'
+            f'<img src="{logo_url}" width="{box_width}" height="{box_height}" alt="logo" '
+            f'style="display:block;width:{box_width}px;height:{box_height}px;'
+            f'object-fit:contain;object-position:center center;margin:0 auto;'
+            f'border:0;outline:none;text-decoration:none;">'
             f'</a>'
             f'</div>'
         )

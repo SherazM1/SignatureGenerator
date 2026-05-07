@@ -11,7 +11,9 @@ EMAIL_SIGNATURE_TEMPLATE = """
                  border:none;
                  border-right:1px solid #BDBDBD;
                  width:170px;
-                 text-align:center;">
+                 text-align:center;
+                 vertical-align:middle;
+                 line-height:0;">
         {logo_html}
       </td>
 
