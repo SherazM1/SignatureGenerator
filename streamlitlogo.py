@@ -1,286 +1,60 @@
-from template import EMAIL_SIGNATURE_TEMPLATE
-from html import escape
+"""Run: python -m streamlit run streamlitlogo.py."""
+import json
 import streamlit as st
 import streamlit.components.v1 as components
+from signature import PRESETS, render_signature, document, validate
 
+st.set_page_config(page_title='Company signatures', page_icon='✉', layout='wide')
+st.markdown('<style>.block-container{max-width:1200px;padding-top:2.5rem;}</style>', unsafe_allow_html=True)
+st.caption('COMPANY TOOLS / EMAIL SIGNATURES')
+st.title('Your signature. Ready to send.')
+st.write('Choose your company, add your details, and bring your signature into Outlook.')
+form, preview = st.columns([1, 1.35], gap='large')
+with form:
+    st.subheader('1. Choose your company')
+    key = st.selectbox('Company', list(PRESETS), format_func=lambda k: PRESETS[k].label)
+    preset = PRESETS[key]
+    st.caption('Your logo, websites, and office address are included automatically.')
+    st.subheader('2. Add your details')
+    name = st.text_input('Full name', placeholder='Alex Morgan', max_chars=100, key='employee_name')
+    title = st.text_input('Job title', placeholder='Account Manager', max_chars=150, key='employee_title')
+    email = st.text_input('Email address', placeholder='Your work email', max_chars=200, key='employee_email')
+    phone = st.text_input('Phone number (optional)', placeholder='479-555-0123', max_chars=40, key='employee_phone')
 
-st.title("Email Signature Generator")
+with preview:
+    st.subheader('3. Preview your signature')
+    st.caption('The preview updates as you type. Sample text fills unfinished required fields.')
+    st.caption('Select the complete signature below, copy it, and paste it into Outlook’s signature settings.')
+    with st.container(border=True):
+        sample = render_signature(key, name or 'Your Name', title or 'Your Job Title', email or 'you@company.com', phone)
+        components.html(document(sample), height=285, scrolling=True)
+    st.caption(f'{preset.label} · One approved logo')
+    with st.expander('Included with this company'):
+        st.write('Websites: ' + ', '.join(preset.websites))
+        st.write(preset.address)
+        st.write('Logo link: ' + (preset.logo_link or 'Unlinked'))
+    errors = validate(name, title, email, phone)
+    if errors:
+        st.info('Complete your name, job title, and email to create your signature.' if not any([name, title, email, phone]) else '\n\n'.join(errors))
+    if not errors:
+        signature = render_signature(key, name, title, email, phone)
+        payload = json.dumps(signature).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+        components.html('''<button id="copy" style="background:#172b46;color:white;border:0;border-radius:8px;padding:12px 20px;cursor:pointer;font:14px Arial;">Copy signature</button>
+<p id="status" role="status" style="font:13px Arial;color:#334155;"></p><script>
+const html = ''' + payload + ''';
+document.getElementById('copy').onclick = async () => {
+ const status = document.getElementById('status');
+ try {
+  if (!navigator.clipboard || typeof ClipboardItem === 'undefined') throw new Error();
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}), 'text/plain':new Blob([parsed.body.textContent],{type:'text/plain'})})]);
+  status.textContent = 'Copied. Paste into your Outlook signature settings.';
+ } catch (_) { status.textContent = 'Your browser could not copy formatting. Download the HTML below, open it, and copy the displayed signature.'; }
+};</script>''', height=100)
+        st.download_button('Download signature HTML', document(signature), file_name=f'{key}-signature.html', mime='text/html')
 
-st.markdown(
-    """
-    **How to use:**  
-    1. Enter your hosted logo URL and fill in the fields below  
-    2. Click **Download signature as HTML**  
-    3. Open the downloaded HTML file in your browser  
-    4. Select the signature, copy it, and paste it into Outlook's signature editor  
-    """
-)
-
-
-# ────────────────────────────────────────────────
-# Helpers
-# ────────────────────────────────────────────────
-def build_logo_html(logo_urls, company_website: str) -> str:
-    """
-    Build stacked logo HTML for up to 3 hosted logo URLs.
-    Outlook handles normal HTTPS image URLs more reliably than base64 data URIs.
-    """
-    hosted_logo_urls = [
-        logo_url.strip()
-        for logo_url in logo_urls[:3]
-        if logo_url.strip().lower().startswith("https://")
-    ]
-
-    if not hosted_logo_urls:
-        return ""
-
-    logo_count = len(hosted_logo_urls)
-
-    if logo_count == 1:
-        padding_bottom = 0
-    elif logo_count == 2:
-        padding_bottom = 12
-    else:  # 3 logos
-        padding_bottom = 8
-
-    safe_company_website = escape(company_website.strip(), quote=True)
-    logo_blocks = []
-
-    for idx, logo_url in enumerate(hosted_logo_urls):
-        safe_logo_url = escape(logo_url, quote=True)
-        is_last = idx == logo_count - 1
-        bottom_space = 0 if is_last else padding_bottom
-
-        img_html = (
-            f'<img src="{safe_logo_url}" alt="logo" width="125" '
-            f'style="display:block;width:125px;height:auto;'
-            f'margin:0 auto;border:0;outline:none;text-decoration:none;">'
-        )
-
-        logo_blocks.append(
-            f'<div style="width:100%;text-align:center;padding-bottom:{bottom_space};">'
-            f'<a href="{safe_company_website}" target="_blank" '
-            f'style="text-decoration:none;display:inline-block;border:none;">'
-            f'{img_html}'
-            f'</a>'
-            f'</div>'
-        )
-
-    return "\n".join(logo_blocks)
-
-
-def make_row(inner_html: str, is_last: bool = False) -> str:
-    """Return a single table row with consistent spacing."""
-    padding = "2px" if is_last else "4px"
-    return f'<tr><td style="padding-bottom:{padding};border:none;">{inner_html}</td></tr>'
-
-
-def build_details_rows(
-    name: str,
-    title: str,
-    phone: str,
-    email: str,
-    website_1: str,
-    website_1_url: str,
-    website_2: str,
-    website_2_url: str,
-    address_line_1: str,
-    address_line_2: str,
-    social_line: str,
-) -> str:
-    """
-    Build the right-hand text block rows dynamically based on which fields are filled.
-    Empty fields simply don't generate a row, so spacing always looks clean.
-
-    NOTE: Outlook loves forcing hyperlinks to blue. We hard-override link styling
-    with inline CSS + !important so links stay black and non-underlined.
-    """
-    items = []
-
-    if name.strip():
-        items.append(
-            f'<span style="font-size:14px;font-weight:bold;color:#000000;">{name}</span>'
-        )
-
-    if title.strip():
-        items.append(
-            f'<span style="font-size:12px;font-weight:bold;color:#000000;">{title}</span>'
-        )
-
-    if phone.strip():
-        items.append(
-            f'<a href="tel:{phone}" '
-            f'style="font-size:12px;color:#000000 !important;'
-            f'text-decoration:none !important;">{phone}</a>'
-        )
-
-    if email.strip():
-        items.append(
-            f'<a href="mailto:{email}" '
-            f'style="font-size:12px;color:#000000 !important;'
-            f'text-decoration:none !important;">{email}</a>'
-        )
-
-    if website_1.strip():
-        items.append(
-            f'<a href="{website_1_url}" '
-            f'style="font-size:12px;color:#000000 !important;'
-            f'text-decoration:none !important;">{website_1}</a>'
-        )
-
-    if website_2.strip():
-        items.append(
-            f'<a href="{website_2_url}" '
-            f'style="font-size:12px;color:#000000 !important;'
-            f'text-decoration:none !important;">{website_2}</a>'
-        )
-
-    if address_line_1.strip():
-        items.append(
-            f'<span style="font-size:12px;color:#000000;">{address_line_1}</span>'
-        )
-
-    if address_line_2.strip():
-        items.append(
-            f'<span style="font-size:12px;color:#000000;">{address_line_2}</span>'
-        )
-
-    if social_line.strip():
-        items.append(
-            f'<span style="font-size:11px;color:#000000;">{social_line}</span>'
-        )
-
-    # Turn items into rows with consistent spacing, slightly tighter on the last line
-    rows = []
-    for idx, html in enumerate(items):
-        is_last = idx == len(items) - 1
-        rows.append(make_row(html, is_last=is_last))
-
-    return "\n".join(rows)
-
-
-
-# ────────────────────────────────────────────────
-# Hosted logo URLs
-# ────────────────────────────────────────────────
-logo_url_1 = st.text_input(
-    "Hosted logo URL",
-    value="",
-    placeholder="https://example.com/logo.png",
-)
-logo_url_2 = st.text_input(
-    "Hosted logo URL 2 (optional)",
-    value="",
-    placeholder="https://example.com/logo-2.png",
-)
-logo_url_3 = st.text_input(
-    "Hosted logo URL 3 (optional)",
-    value="",
-    placeholder="https://example.com/logo-3.png",
-)
-
-logo_urls = [logo_url_1, logo_url_2, logo_url_3]
-invalid_logo_urls = [
-    logo_url.strip()
-    for logo_url in logo_urls
-    if logo_url.strip() and not logo_url.strip().lower().startswith("https://")
-]
-
-if invalid_logo_urls:
-    st.warning("Logo URLs must be hosted HTTPS URLs. Non-HTTPS logo URLs will be ignored.")
-
-
-# ────────────────────────────────────────────────
-# Text fields
-# ────────────────────────────────────────────────
-col1, col2 = st.columns(2)
-
-with col1:
-    name = st.text_input("Name", value="Raz")
-    title = st.text_input("Job Title", value="MVP")
-    phone = st.text_input("Phone Number", value="555-555-5555")
-    email = st.text_input("Email", value="smukhtar@soapboxretail.com")
-
-with col2:
-    website_1 = st.text_input("Website 1 (text)", value="www.soapboxretail.com")
-    website_1_url = st.text_input(
-        "Website 1 URL",
-        value="https://www.soapboxretail.com",
-    )
-    website_2 = st.text_input("Website 2 (text, optional)", value="")
-    website_2_url = st.text_input(
-        "Website 2 URL (optional)",
-        value="",
-    )
-
-address_line_1 = st.text_input(
-    "Address line 1",
-    value="609 SW 8th St #140 - Bentonville, AR",
-)
-address_line_2 = st.text_input(
-    "Address line 2 (optional)",
-    value="",
-)
-social_line = st.text_input(
-    "Extra line (optional)",
-    value="",
-)
-
-company_website = st.text_input(
-    "Company website (logo link)",
-    value="https://www.soapboxretail.com",
-)
-
-logo_html = build_logo_html(logo_urls, company_website)
-
-
-# ────────────────────────────────────────────────
-# Build dynamic rows + full HTML
-# ────────────────────────────────────────────────
-details_rows = build_details_rows(
-    name,
-    title,
-    phone,
-    email,
-    website_1,
-    website_1_url,
-    website_2,
-    website_2_url,
-    address_line_1,
-    address_line_2,
-    social_line,
-)
-
-fields = {
-    "logo_html": logo_html,
-    "details_rows": details_rows,
-}
-
-signature_html = EMAIL_SIGNATURE_TEMPLATE.format(**fields)
-
-html_document = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body>
-{signature_html}
-</body>
-</html>
-"""
-
-
-# ────────────────────────────────────────────────
-# Preview
-# ────────────────────────────────────────────────
-st.markdown("### Signature Preview")
-components.html(html_document, height=280, scrolling=False)
-
-
-# ────────────────────────────────────────────────
-# Download as HTML
-# ────────────────────────────────────────────────
-st.download_button(
-    "Download signature as HTML",
-    data=html_document,
-    file_name="signature.html",
-    mime="text/html",
-)
+with st.expander('Add your signature to Outlook'):
+    st.write('Copy your completed signature. In Outlook, open signature settings, create a signature, and paste. Choose when it should appear, then save.')
+    st.write('If formatted copy is unavailable, download the HTML, open it in a browser, select the displayed signature, and copy it into Outlook.')
+    st.write('Send a test email and check the received message before using your signature.')
+    st.link_button('Open Microsoft’s Outlook instructions', 'https://support.microsoft.com/en-us/outlook/mail/how-to-add-and-change-an-email-signature-in-outlook')
